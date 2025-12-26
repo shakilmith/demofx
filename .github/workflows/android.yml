@@ -14,27 +14,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Gluon GraalVM
-        uses: graalvm/setup-graalvm@v1
+        # This is the correct action to avoid the "Unsupported distribution" error
+        uses: gluonhq/setup-graalvm@v1
         with:
           java-version: '21'
-          distribution: 'gluon' # Crucial for Android/iOS patches
-          components: 'native-image'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install Android NDK
-        # GluonFX 1.0.23+ works best with NDK r25b (25.2.9519653)
         run: |
+          # NDK 25.2.9519653 is the stable choice for GluonFX in 2025
           sdkmanager "ndk;25.2.9519653"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-      - name: Build Native Android App
-        # This triggers the build and packaging into an APK
+      - name: Build and Package Android App
         run: mvn gluonfx:build gluonfx:package -Pandroid
 
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: demofx-android-apk
