@@ -1,59 +1,69 @@
-name: Build Android App
+name: Android
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
+    branches: [ master ]
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up GraalVM 17
-        uses: graalvm/setup-graalvm@v1
+      - name: Setup Gluon's GraalVM
+        uses: gluonhq/setup-graalvm@v1
         with:
-          java-version: '17'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          cache: 'maven'
+          graalvm: '22.1.0.1-Final'
+          jdk: 'java17'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Maven 3.8.8
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r28c
+          add-to-path: false
+
+      - name: Install libraries
         run: |
-          MAVEN_VERSION=3.8.8
-          curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -o maven.tar.gz
-          tar -xzf maven.tar.gz
-          echo "$PWD/apache-maven-${MAVEN_VERSION}/bin" >> $GITHUB_PATH
-          mvn -version
+          sudo apt-get update
+          sudo apt install -y \
+            libasound2-dev libavcodec-dev libavformat-dev libavutil-dev \
+            libgl-dev libgtk-3-dev libpango1.0-dev libxtst-dev
 
-      - name: Install Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android Keystore
+        id: android_keystore_file
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'my.keystore'
+          encodedString: ${{ secrets.GLUON_ANDROID_KEYSTORE_BASE64 }}
 
-      - name: Install Android NDK
-        run: sdkmanager "ndk;26.1.10909125"
+      - name: Gluon License
+        uses: gluonhq/gluon-build-license@v1
+        with:
+          gluon-license: ${{ secrets.GLUON_LICENSE }}
 
-      - name: Accept Android licenses
-        run: yes | sdkmanager --licenses
-
-      - name: Set environment variables
+      - name: Gluon Build
         run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
+          export ANDROID_SDK=$ANDROID_HOME
+          ./mvnw -Pandroid gluonfx:build gluonfx:package
+        env:
+          GLUON_ANDROID_KEYSTOREPATH: ${{ steps.android_keystore_file.outputs.filePath }}
+          GLUON_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.GLUON_ANDROID_KEYSTORE_PASSWORD }}
+          GLUON_ANDROID_KEYALIAS: ${{ secrets.GLUON_ANDROID_KEYALIAS }}
+          GLUON_ANDROID_KEYALIAS_PASSWORD: ${{ secrets.GLUON_ANDROID_KEYALIAS_PASSWORD }}
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-      - name: Verify tools
-        run: |
-          java -version
-          mvn -version
-          sdkmanager --list_installed
+      - name: Make staging directory
+        run: mkdir staging
 
-      - name: Build Android APK
-        run: mvn clean gluonfx:build gluonfx:package -Pandroid
+      - name: Copy packages to staging
+        run: cp -r target/gluonfx/aarch64-android/gvm/*.aab staging || true
 
-      - name: Upload APK artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: target/gluonfx/**/app-debug.apk
+          name: Package
+          path: staging
