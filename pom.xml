@@ -9,6 +9,7 @@
   <version>1.0</version>
 
   <properties>
+   <project.build.soruceEncoding>UTF-8</project.build.soruceEncoding>
     <java.version>17</java.version>
     <javafx.version>17.0.10</javafx.version>
     <gluonfx.version>1.0.23</gluonfx.version>
