@@ -8,6 +8,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <javafx.version>21.0.1</javafx.version>
+        <gluonfx.plugin.version>1.0.28</gluonfx.plugin.version>
+        <main.class>com.example.App</main.class>
     </properties>
     <dependencies>
         <dependency>
@@ -20,7 +23,25 @@
             <artifactId>javafx-fxml</artifactId>
             <version>13</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>display</artifactId>
+            <version>4.0.20</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>lifecycle</artifactId>
+            <version>4.0.20</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gluonhq.attach</groupId>
+            <artifactId>storage</artifactId>
+            <version>4.0.20</version>
+        </dependency>
     </dependencies>
+
+
     <build>
         <plugins>
             <plugin>
@@ -29,6 +50,7 @@
                 <version>3.8.0</version>
                 <configuration>
                     <release>11</release>
+                    <target>11</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -45,6 +67,25 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.gluonhq</groupId>
+                <artifactId>gluonfx-maven-plugin</artifactId>
+                <version>${gluonfx.plugin.version}</version>
+                <configuration>
+                    <target>android</target>
+                    <mainClass>${main.class}</mainClass>
+                    <attachList>
+                        <list>display</list>
+                        <list>lifecycle</list>
+                        <list>storage</list>
+                    </attachList>
+                    <nativeImageArgs>
+                        <arg>-J-Xmx4g</arg>
+                        <arg>--no-fallback</arg>
+                    </nativeImageArgs>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,0 +1,41 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Gluon GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'gluon' # Crucial for Android/iOS patches
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        # GluonFX 1.0.23+ works best with NDK r25b (25.2.9519653)
+        run: |
+          sdkmanager "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      - name: Build Native Android App
+        # This triggers the build and packaging into an APK
+        run: mvn gluonfx:build gluonfx:package -Pandroid
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: demofx-android-apk
+          path: target/gluonfx/aarch64-android/gvm/*.apk
