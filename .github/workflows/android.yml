@@ -21,6 +21,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'maven'
 
+      - name: Install Maven 3.8.8
+        run: |
+          MAVEN_VERSION=3.8.8
+          curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -o maven.tar.gz
+          tar -xzf maven.tar.gz
+          echo "$PWD/apache-maven-${MAVEN_VERSION}/bin" >> $GITHUB_PATH
+          mvn -version
+
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
@@ -40,8 +48,6 @@ jobs:
           java -version
           mvn -version
           sdkmanager --list_installed
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
 
       - name: Build Android APK
         run: mvn clean gluonfx:build gluonfx:package -Pandroid
