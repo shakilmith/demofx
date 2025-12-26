@@ -1,33 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
-    <artifactId>app</artifactId>
+    <groupId>com.gluonhq.samples</groupId>
+    <artifactId>hellogluon</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>ExampleApp</name>
+    <name>HelloGluon</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>11</maven.compiler.release>
-
         <javafx.version>21</javafx.version>
         <charm.version>6.2.3</charm.version>
         <attach.version>4.0.24-SNAPSHOT</attach.version>
         <connect.version>2.0.1</connect.version>
-
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
         <gluonfx.maven.plugin.version>1.0.28-SNAPSHOT</gluonfx.maven.plugin.version>
-
-        <main.class>com.example.App</main.class>
+        <main.class>com.gluonhq.hello.HelloGluonApp</main.class>
         <app.identifier>${main.class}</app.identifier>
-        <app.description>Example Gluon App</app.description>
-
+        <app.description>The HelloGluon app</app.description>
         <package.type/>
         <mac.app.store/>
         <mac.signing.user.name/>
@@ -46,13 +39,11 @@
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.gluonhq</groupId>
             <artifactId>charm-glisten</artifactId>
             <version>${charm.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.gluonhq.attach</groupId>
             <artifactId>display</artifactId>
@@ -90,7 +81,7 @@
             <url>https://central.sonatype.com/repository/maven-snapshots/</url>
         </repository>
     </repositories>
-
+    
     <pluginRepositories>
         <pluginRepository>
             <id>snapshot</id>
@@ -131,14 +122,14 @@
                     <mainClass>${main.class}</mainClass>
                     <appIdentifier>${app.identifier}</appIdentifier>
                     <releaseConfiguration>
-                        <vendor>Example</vendor>
+                        <vendor>Gluon</vendor>
                         <description>${app.description}</description>
                         <packageType>${package.type}</packageType>
-
+                        <!-- for macOS/iOS -->
                         <macAppStore>${mac.app.store}</macAppStore>
                         <bundleShortVersion>${bundle.short.version}</bundleShortVersion>
                         <bundleVersion>${bundle.version}</bundleVersion>
-
+                        <!-- for Android -->
                         <versionCode>${version.code}</versionCode>
                         <providedKeyStorePath>${provided.keystore.path}</providedKeyStorePath>
                         <providedKeyStorePassword>${provided.keystore.password}</providedKeyStorePassword>
@@ -160,12 +151,37 @@
                 <gluonfx.target>host</gluonfx.target>
             </properties>
         </profile>
-
+        <profile>
+            <id>mac</id>
+            <properties>
+                <package.type>pkg</package.type>
+                <mac.app.store>false</mac.app.store>
+                <bundle.version>2.${env.GITHUB_RUN_NUMBER}</bundle.version>
+                <bundle.short.version>1.0</bundle.short.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>macstore</id>
+            <properties>
+                <package.type>pkg</package.type>
+                <mac.app.store>true</mac.app.store>
+                <bundle.version>2.${env.GITHUB_RUN_NUMBER}</bundle.version>
+                <bundle.short.version>1.6</bundle.short.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>ios</id>
+            <properties>
+                <gluonfx.target>ios</gluonfx.target>
+                <bundle.version>${env.GITHUB_RUN_NUMBER}</bundle.version>
+                <bundle.short.version>1.0</bundle.short.version>
+            </properties>
+        </profile>
         <profile>
             <id>android</id>
             <properties>
                 <gluonfx.target>android</gluonfx.target>
-                <app.identifier>com.example.app</app.identifier>
+                <app.identifier>com.gluonhq.samples.hellogluon</app.identifier>
                 <version.code>${env.GITHUB_RUN_NUMBER}</version.code>
                 <provided.keystore.path>${env.GLUON_ANDROID_KEYSTOREPATH}</provided.keystore.path>
                 <provided.keystore.password>${env.GLUON_ANDROID_KEYSTORE_PASSWORD}</provided.keystore.password>
@@ -173,6 +189,11 @@
                 <provided.key.alias.password>${env.GLUON_ANDROID_KEYALIAS_PASSWORD}</provided.key.alias.password>
             </properties>
         </profile>
+        <profile>
+            <id>pi</id>
+            <properties>
+                <gluonfx.target>linux-aarch64</gluonfx.target>
+            </properties>
+        </profile>
     </profiles>
-
 </project>
